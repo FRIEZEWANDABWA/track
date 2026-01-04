@@ -1,14 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { BarChart3, PieChart, Upload, Download, Filter, Calendar } from 'lucide-react';
 import { useAppStore } from '../store';
-import { format, startOfWeek, startOfMonth, startOfQuarter, endOfWeek, endOfMonth, endOfQuarter } from 'date-fns';
+import { ExpensePieChart, IncomeExpenseBarChart } from './Charts';
+import { format, startOfWeek, startOfMonth, startOfQuarter, endOfWeek, endOfMonth, endOfQuarter, subMonths } from 'date-fns';
 
 const Reports: React.FC = () => {
-  const { transactions, categories } = useAppStore();
+  const { transactions, categories, processRecurringTransactions } = useAppStore();
   const [filterPeriod, setFilterPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly'>('monthly');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Process recurring transactions on component mount
+  useEffect(() => {
+    processRecurringTransactions();
+  }, [processRecurringTransactions]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -56,8 +62,41 @@ const Reports: React.FC = () => {
     const amount = filteredTransactions
       .filter(tx => tx.type === 'expense' && tx.categoryId === category.id)
       .reduce((sum, tx) => sum + tx.amount, 0);
-    return { category: category.name, amount, color: category.color };
-  }).filter(item => item.amount > 0);
+    return { name: category.name, value: amount, color: category.color };
+  }).filter(item => item.value > 0);
+
+  // Generate trend data for the last 6 months
+  const getTrendData = () => {
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = subMonths(new Date(), i);
+      const monthStart = startOfMonth(date);
+      const monthEnd = endOfMonth(date);
+      
+      const monthTransactions = transactions.filter(tx => {
+        const txDate = new Date(tx.date);
+        return txDate >= monthStart && txDate <= monthEnd;
+      });
+      
+      const income = monthTransactions
+        .filter(tx => tx.type === 'income')
+        .reduce((sum, tx) => sum + tx.amount, 0);
+      
+      const expenses = monthTransactions
+        .filter(tx => tx.type === 'expense')
+        .reduce((sum, tx) => sum + tx.amount, 0);
+      
+      months.push({
+        period: format(date, 'MMM yyyy'),
+        income,
+        expenses,
+        net: income - expenses,
+      });
+    }
+    return months;
+  };
+
+  const trendData = getTrendData();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -250,9 +289,30 @@ const Reports: React.FC = () => {
         </div>
       </div>
 
-      {/* Expenses by Category */}
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Expense Pie Chart */}
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Expenses by Category</h3>
+          {expensesByCategory.length === 0 ? (
+            <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+              No expenses found for the selected period
+            </div>
+          ) : (
+            <ExpensePieChart data={expensesByCategory} />
+          )}
+        </div>
+
+        {/* Income vs Expenses Trend */}
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">6-Month Trend</h3>
+          <IncomeExpenseBarChart data={trendData} />
+        </div>
+      </div>
+
+      {/* Category Breakdown Table */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Expenses by Category</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Category Breakdown</h3>
         {expensesByCategory.length === 0 ? (
           <div className="text-center py-8 text-gray-600 dark:text-gray-400">
             No expenses found for the selected period
@@ -260,7 +320,7 @@ const Reports: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {expensesByCategory.map((item, index) => {
-              const percentage = totalExpenses > 0 ? (item.amount / totalExpenses) * 100 : 0;
+              const percentage = totalExpenses > 0 ? (item.value / totalExpenses) * 100 : 0;
               return (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -268,10 +328,10 @@ const Reports: React.FC = () => {
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="font-medium text-gray-900 dark:text-white">{item.category}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-gray-900 dark:text-white">{formatCurrency(item.amount)}</div>
+                    <div className="font-semibold text-gray-900 dark:text-white">{formatCurrency(item.value)}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">{percentage.toFixed(1)}%</div>
                   </div>
                 </div>

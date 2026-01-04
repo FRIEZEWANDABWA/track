@@ -25,6 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Transactions', href: '/transactions', icon: CreditCard },
+    { name: 'Recurring', href: '/recurring', icon: TrendingUp },
     { name: 'Accounts', href: '/accounts', icon: DollarSign },
     { name: 'Projects', href: '/projects', icon: Target },
     { name: 'Reports', href: '/reports', icon: BarChart3 },

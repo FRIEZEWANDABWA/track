@@ -65,3 +65,19 @@ export interface DashboardStats {
   monthlySavings: number;
   savingsRate: number;
 }
+
+export interface RecurringTransaction {
+  id: string;
+  name: string;
+  amount: number;
+  type: 'income' | 'expense';
+  categoryId: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+  frequency: 'monthly' | 'weekly' | 'daily';
+  startDate: string;
+  endDate?: string;
+  isActive: boolean;
+  lastProcessed?: string;
+  createdAt: string;
+}

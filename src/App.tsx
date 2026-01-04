@@ -4,6 +4,7 @@ import { useAppStore } from './store';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
+import RecurringTransactions from './components/RecurringTransactions';
 import Accounts from './components/Accounts';
 import Projects from './components/Projects';
 import Reports from './components/Reports';
@@ -61,6 +62,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
+          <Route path="/recurring" element={<RecurringTransactions />} />
           <Route path="/accounts" element={<Accounts />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/reports" element={<Reports />} />

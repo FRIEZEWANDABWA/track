@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Account, Transaction, Category, Project, IncomeSource, User } from './types';
+import type { Account, Transaction, Category, Project, IncomeSource, User, RecurringTransaction } from './types';
 
 interface AppState {
   // Data
@@ -9,6 +9,7 @@ interface AppState {
   categories: Category[];
   projects: Project[];
   incomeSources: IncomeSource[];
+  recurringTransactions: RecurringTransaction[];
   
   // UI State
   theme: 'light' | 'dark';
@@ -31,6 +32,12 @@ interface AppState {
   addProject: (project: Project) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
   deleteProject: (id: string) => void;
+  
+  // Recurring transactions
+  addRecurringTransaction: (recurring: RecurringTransaction) => void;
+  updateRecurringTransaction: (id: string, updates: Partial<RecurringTransaction>) => void;
+  deleteRecurringTransaction: (id: string) => void;
+  processRecurringTransactions: () => void;
   
   // Computed values
   getAccountBalance: (accountId: string) => number;
@@ -60,8 +67,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     { id: '8', name: 'Shopping', type: 'expense', group: 'want', color: '#84cc16' },
     { id: '9', name: 'Savings', type: 'savings', group: 'wealth', color: '#10b981' },
     { id: '10', name: 'Black Tax', type: 'expense', group: 'obligation', color: '#6b7280' },
+    { id: '11', name: 'OPEX - Petty Cash', type: 'expense', group: 'need', color: '#f97316' },
+    { id: '12', name: 'OPEX - Daily Operations', type: 'expense', group: 'need', color: '#eab308' },
   ],
   projects: [],
+  recurringTransactions: [],
   incomeSources: [
     { id: '1', name: 'Salary', type: 'salary', isActive: true },
     { id: '2', name: 'Business', type: 'business', isActive: true },
@@ -129,6 +139,71 @@ export const useAppStore = create<AppState>((set, get) => ({
   deleteProject: (id) => set((state) => ({
     projects: state.projects.filter(proj => proj.id !== id)
   })),
+  
+  // Recurring transactions
+  addRecurringTransaction: (recurring) => set((state) => ({ 
+    recurringTransactions: [...state.recurringTransactions, recurring] 
+  })),
+  
+  updateRecurringTransaction: (id, updates) => set((state) => ({
+    recurringTransactions: state.recurringTransactions.map(rt => 
+      rt.id === id ? { ...rt, ...updates } : rt
+    )
+  })),
+  
+  deleteRecurringTransaction: (id) => set((state) => ({
+    recurringTransactions: state.recurringTransactions.filter(rt => rt.id !== id)
+  })),
+  
+  processRecurringTransactions: () => {
+    const state = get();
+    const today = new Date();
+    
+    state.recurringTransactions.forEach(rt => {
+      if (!rt.isActive) return;
+      
+      // Check if end date has passed
+      if (rt.endDate && new Date(rt.endDate) < today) {
+        state.updateRecurringTransaction(rt.id, { isActive: false });
+        return;
+      }
+      
+      const lastProcessed = rt.lastProcessed ? new Date(rt.lastProcessed) : new Date(rt.startDate);
+      let shouldProcess = false;
+      
+      if (rt.frequency === 'monthly') {
+        const nextMonth = new Date(lastProcessed);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        shouldProcess = today >= nextMonth;
+      } else if (rt.frequency === 'weekly') {
+        const nextWeek = new Date(lastProcessed);
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        shouldProcess = today >= nextWeek;
+      } else if (rt.frequency === 'daily') {
+        const nextDay = new Date(lastProcessed);
+        nextDay.setDate(nextDay.getDate() + 1);
+        shouldProcess = today >= nextDay;
+      }
+      
+      if (shouldProcess) {
+        const newTransaction: Transaction = {
+          id: Date.now().toString() + Math.random(),
+          date: today.toISOString(),
+          amount: rt.amount,
+          type: rt.type,
+          categoryId: rt.categoryId,
+          fromAccountId: rt.fromAccountId,
+          toAccountId: rt.toAccountId,
+          notes: `Auto: ${rt.name}`,
+          tags: ['recurring'],
+          createdAt: today.toISOString(),
+        };
+        
+        state.addTransaction(newTransaction);
+        state.updateRecurringTransaction(rt.id, { lastProcessed: today.toISOString() });
+      }
+    });
+  },
   
   // Computed values
   getAccountBalance: (accountId) => {
