@@ -39,6 +39,11 @@ interface AppState {
   deleteRecurringTransaction: (id: string) => void;
   processRecurringTransactions: () => void;
   
+  // Category actions
+  addCategory: (category: Category) => void;
+  updateCategory: (id: string, updates: Partial<Category>) => void;
+  deleteCategory: (id: string) => void;
+  
   // Computed values
   getAccountBalance: (accountId: string) => number;
   getNetWorth: () => number;
@@ -69,6 +74,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     { id: '10', name: 'Black Tax', type: 'expense', group: 'obligation', color: '#6b7280' },
     { id: '11', name: 'OPEX - Petty Cash', type: 'expense', group: 'need', color: '#f97316' },
     { id: '12', name: 'OPEX - Daily Operations', type: 'expense', group: 'need', color: '#eab308' },
+    { id: '13', name: 'Internet', type: 'expense', group: 'need', color: '#06b6d4' },
+    { id: '14', name: 'Bundles', type: 'expense', group: 'need', color: '#8b5cf6' },
   ],
   projects: [],
   recurringTransactions: [],
@@ -204,6 +211,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     });
   },
+  
+  // Category actions
+  addCategory: (category) => set((state) => ({ 
+    categories: [...state.categories, category] 
+  })),
+  
+  updateCategory: (id, updates) => set((state) => ({
+    categories: state.categories.map(cat => 
+      cat.id === id ? { ...cat, ...updates } : cat
+    )
+  })),
+  
+  deleteCategory: (id) => set((state) => ({
+    categories: state.categories.filter(cat => cat.id !== id)
+  })),
   
   // Computed values
   getAccountBalance: (accountId) => {

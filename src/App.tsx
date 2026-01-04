@@ -6,13 +6,14 @@ import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import RecurringTransactions from './components/RecurringTransactions';
 import Accounts from './components/Accounts';
+import Categories from './components/Categories';
 import Projects from './components/Projects';
 import Reports from './components/Reports';
 import Settings from './components/Settings';
 import Login from './components/Login';
 
 function App() {
-  const { user, theme, setTheme, setUser } = useAppStore();
+  const { user, theme, setTheme, setUser, processRecurringTransactions } = useAppStore();
 
   // Initialize theme on app load
   useEffect(() => {
@@ -22,6 +23,18 @@ function App() {
     setTheme(initialTheme);
     document.documentElement.classList.toggle('dark', initialTheme === 'dark');
   }, [setTheme]);
+
+  // Process recurring transactions on app load and every hour
+  useEffect(() => {
+    processRecurringTransactions();
+    
+    // Set up interval to process recurring transactions every hour
+    const interval = setInterval(() => {
+      processRecurringTransactions();
+    }, 60 * 60 * 1000); // 1 hour
+    
+    return () => clearInterval(interval);
+  }, [processRecurringTransactions]);
 
   // Save theme to localStorage when it changes
   useEffect(() => {
@@ -64,6 +77,7 @@ function App() {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/recurring" element={<RecurringTransactions />} />
           <Route path="/accounts" element={<Accounts />} />
+          <Route path="/categories" element={<Categories />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />

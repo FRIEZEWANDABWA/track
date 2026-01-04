@@ -5,7 +5,7 @@ import { useAppStore } from '../store';
 import { format } from 'date-fns';
 
 const Dashboard: React.FC = () => {
-  const { getNetWorth, getMonthlyStats, projects, transactions } = useAppStore();
+  const { getNetWorth, getMonthlyStats, projects, transactions, categories, accounts, getAccountBalance } = useAppStore();
   
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -13,6 +13,14 @@ const Dashboard: React.FC = () => {
   
   const netWorth = getNetWorth();
   const monthlyStats = getMonthlyStats(currentYear, currentMonth);
+  
+  // Calculate salary balance (income from salary category)
+  const salaryCategory = categories.find(cat => cat.name.toLowerCase().includes('salary'));
+  const salaryBalance = salaryCategory 
+    ? transactions
+        .filter(tx => tx.type === 'income' && tx.categoryId === salaryCategory.id)
+        .reduce((sum, tx) => sum + tx.amount, 0)
+    : 0;
   
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -167,12 +175,18 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard
           title="Net Worth"
           value={formatCurrency(netWorth)}
           icon={DollarSign}
           color="blue"
+        />
+        <StatCard
+          title="Salary Balance"
+          value={formatCurrency(salaryBalance)}
+          icon={TrendingUp}
+          color="green"
         />
         <StatCard
           title="Monthly Income"
@@ -206,8 +220,87 @@ const Dashboard: React.FC = () => {
           <RecentTransactions />
           <ProjectProgress />
         </div>
-        <div>
+        <div className="space-y-6">
           <QuickActions />
+          
+          {/* Account Balances Breakdown */}
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Account Balances</h3>
+            {accounts.length === 0 ? (
+              <div className="text-center py-4 text-gray-600 dark:text-gray-400">
+                No accounts yet
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {accounts.slice(0, 5).map((account) => {
+                  const balance = getAccountBalance(account.id);
+                  return (
+                    <div key={account.id} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {account.name}
+                        </span>
+                      </div>
+                      <span className={`text-sm font-semibold ${
+                        balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {formatCurrency(balance)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          
+          {/* Category Spending This Month */}
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Top Spending Categories</h3>
+            {(() => {
+              const categorySpending = categories
+                .map(category => {
+                  const amount = transactions
+                    .filter(tx => {
+                      const txDate = new Date(tx.date);
+                      return tx.type === 'expense' && 
+                             tx.categoryId === category.id &&
+                             txDate.getFullYear() === currentYear &&
+                             txDate.getMonth() === currentMonth;
+                    })
+                    .reduce((sum, tx) => sum + tx.amount, 0);
+                  return { ...category, amount };
+                })
+                .filter(cat => cat.amount > 0)
+                .sort((a, b) => b.amount - a.amount)
+                .slice(0, 5);
+              
+              return categorySpending.length === 0 ? (
+                <div className="text-center py-4 text-gray-600 dark:text-gray-400">
+                  No expenses this month
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {categorySpending.map((category) => (
+                    <div key={category.id} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {category.name}
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                        {formatCurrency(category.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </div>
     </div>

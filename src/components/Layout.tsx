@@ -27,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Transactions', href: '/transactions', icon: CreditCard },
     { name: 'Recurring', href: '/recurring', icon: TrendingUp },
     { name: 'Accounts', href: '/accounts', icon: DollarSign },
+    { name: 'Categories', href: '/categories', icon: Target },
     { name: 'Projects', href: '/projects', icon: Target },
     { name: 'Reports', href: '/reports', icon: BarChart3 },
     { name: 'Settings', href: '/settings', icon: Settings },
