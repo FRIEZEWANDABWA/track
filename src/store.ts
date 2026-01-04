@@ -99,7 +99,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
       // Load user data from Supabase when user logs in
-      get().loadUserData();
+      setTimeout(() => get().loadUserData(), 100);
     } else {
       localStorage.removeItem('user');
     }
@@ -140,11 +140,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (state.user?.id) dbService.saveTransaction(transaction, state.user.id);
   },
   
-  updateTransaction: (id, updates) => set((state) => ({
-    transactions: state.transactions.map(tx => 
-      tx.id === id ? { ...tx, ...updates } : tx
-    )
-  })),
+  updateTransaction: (id, updates) => {
+    set((state) => ({
+      transactions: state.transactions.map(tx => 
+        tx.id === id ? { ...tx, ...updates } : tx
+      )
+    }));
+    const state = get();
+    if (state.user?.id) {
+      const updatedTransaction = state.transactions.find(tx => tx.id === id);
+      if (updatedTransaction) dbService.saveTransaction(updatedTransaction, state.user.id);
+    }
+  },
   
   deleteTransaction: (id) => set((state) => ({
     transactions: state.transactions.filter(tx => tx.id !== id)
@@ -258,6 +265,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         transactions: data.transactions || [],
         categories: data.categories?.length ? data.categories : state.categories,
       });
+      console.log('Data loaded from Supabase:', data);
     } catch (error) {
       console.error('Failed to load data:', error);
     }
