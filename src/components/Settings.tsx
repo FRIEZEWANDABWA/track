@@ -26,21 +26,112 @@ const Settings: React.FC = () => {
   };
 
   const exportAllData = () => {
+    const { accounts, transactions, categories, projects, recurringTransactions } = useAppStore.getState();
     const data = {
       user,
-      accounts: JSON.parse(localStorage.getItem('accounts') || '[]'),
-      transactions: JSON.parse(localStorage.getItem('transactions') || '[]'),
-      projects: JSON.parse(localStorage.getItem('projects') || '[]'),
+      accounts,
+      transactions,
+      categories,
+      projects,
+      recurringTransactions,
       exportDate: new Date().toISOString(),
+      version: '1.0'
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `moneytracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `moneytracker-complete-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string);
+        const { accounts, transactions, categories, projects, recurringTransactions } = useAppStore.getState();
+        
+        // Merge data with duplicate prevention
+        const mergedAccounts = [...accounts];
+        const mergedTransactions = [...transactions];
+        const mergedCategories = [...categories];
+        const mergedProjects = [...projects];
+        const mergedRecurring = [...recurringTransactions];
+        
+        // Add imported accounts (skip duplicates by name)
+        if (importedData.accounts) {
+          importedData.accounts.forEach((importedAccount: any) => {
+            if (!mergedAccounts.find(acc => acc.name === importedAccount.name)) {
+              mergedAccounts.push({ ...importedAccount, id: Date.now().toString() + Math.random() });
+            }
+          });
+        }
+        
+        // Add imported transactions (skip duplicates by date + amount + notes)
+        if (importedData.transactions) {
+          importedData.transactions.forEach((importedTx: any) => {
+            const isDuplicate = mergedTransactions.find(tx => 
+              tx.date === importedTx.date && 
+              tx.amount === importedTx.amount && 
+              tx.notes === importedTx.notes
+            );
+            if (!isDuplicate) {
+              mergedTransactions.push({ ...importedTx, id: Date.now().toString() + Math.random() });
+            }
+          });
+        }
+        
+        // Add imported categories (skip duplicates by name)
+        if (importedData.categories) {
+          importedData.categories.forEach((importedCat: any) => {
+            if (!mergedCategories.find(cat => cat.name === importedCat.name)) {
+              mergedCategories.push({ ...importedCat, id: Date.now().toString() + Math.random() });
+            }
+          });
+        }
+        
+        // Add imported projects (skip duplicates by name)
+        if (importedData.projects) {
+          importedData.projects.forEach((importedProj: any) => {
+            if (!mergedProjects.find(proj => proj.name === importedProj.name)) {
+              mergedProjects.push({ ...importedProj, id: Date.now().toString() + Math.random() });
+            }
+          });
+        }
+        
+        // Add imported recurring transactions (skip duplicates by name)
+        if (importedData.recurringTransactions) {
+          importedData.recurringTransactions.forEach((importedRec: any) => {
+            if (!mergedRecurring.find(rec => rec.name === importedRec.name)) {
+              mergedRecurring.push({ ...importedRec, id: Date.now().toString() + Math.random() });
+            }
+          });
+        }
+        
+        // Update store with merged data
+        useAppStore.setState({
+          accounts: mergedAccounts,
+          transactions: mergedTransactions,
+          categories: mergedCategories,
+          projects: mergedProjects,
+          recurringTransactions: mergedRecurring
+        });
+        
+        alert(`Data imported successfully! Added ${importedData.transactions?.length || 0} transactions, ${importedData.accounts?.length || 0} accounts, and more.`);
+      } catch (error) {
+        alert('Error importing data. Please check the file format.');
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset input
+    event.target.value = '';
   };
 
   const clearAllData = () => {
@@ -165,15 +256,28 @@ const Settings: React.FC = () => {
           <div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-2">Export Data</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Download a backup of all your financial data
+              Download a complete backup of all your financial data
             </p>
             <button
               onClick={exportAllData}
               className="btn-secondary"
             >
               <Download className="h-4 w-4 mr-2" />
-              Export All Data
+              Export Complete Backup
             </button>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Import Data</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Upload a backup file to restore your data (duplicates will be skipped)
+            </p>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportData}
+              className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-300"
+            />
           </div>
 
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">

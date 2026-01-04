@@ -63,6 +63,55 @@ function App() {
     }
   }, [user]);
 
+  // Auto-backup data every 10 minutes
+  useEffect(() => {
+    const backupData = () => {
+      const state = useAppStore.getState();
+      const backup = {
+        accounts: state.accounts,
+        transactions: state.transactions,
+        categories: state.categories,
+        projects: state.projects,
+        recurringTransactions: state.recurringTransactions,
+        timestamp: new Date().toISOString()
+      };
+      
+      const backupKey = `backup_${Date.now()}`;
+      localStorage.setItem(backupKey, JSON.stringify(backup));
+      
+      // Keep only last 3 backups
+      const allKeys = Object.keys(localStorage);
+      const backupKeys = allKeys.filter(key => key.startsWith('backup_')).sort();
+      if (backupKeys.length > 3) {
+        backupKeys.slice(0, backupKeys.length - 3).forEach(key => {
+          localStorage.removeItem(key);
+        });
+      }
+    };
+    
+    backupData();
+    const interval = setInterval(backupData, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Auto-backup data every 5 minutes
+  useEffect(() => {
+    const backupData = () => {
+      const data = {
+        accounts: JSON.parse(localStorage.getItem('accounts') || '[]'),
+        transactions: JSON.parse(localStorage.getItem('transactions') || '[]'),
+        categories: JSON.parse(localStorage.getItem('categories') || '[]'),
+        projects: JSON.parse(localStorage.getItem('projects') || '[]'),
+        recurringTransactions: JSON.parse(localStorage.getItem('recurringTransactions') || '[]'),
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('backup_' + Date.now(), JSON.stringify(data));
+    };
+    
+    const interval = setInterval(backupData, 5 * 60 * 1000); // 5 minutes
+    return () => clearInterval(interval);
+  }, []);
+
   // If user is not logged in, show login page
   if (!user) {
     return <Login />;
