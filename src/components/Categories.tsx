@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Tag, Palette } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag } from 'lucide-react';
 import { useAppStore } from '../store';
 import type { Category } from '../types';
 
