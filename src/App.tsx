@@ -8,12 +8,11 @@ import Accounts from './components/Accounts';
 import Login from './components/Login';
 
 function App() {
-  const { user, theme, setTheme } = useAppStore();
+  const { user, theme, setTheme, setUser } = useAppStore();
 
   // Initialize theme on app load
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     const initialTheme = savedTheme || 'dark'; // Default to dark
     
     setTheme(initialTheme);
