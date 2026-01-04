@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, RefreshCw, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, RefreshCw, DollarSign } from 'lucide-react';
 import { useAppStore } from '../store';
 import type { RecurringTransaction } from '../types';
 import { format } from 'date-fns';
