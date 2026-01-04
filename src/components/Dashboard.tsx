@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, DollarSign, Target, PiggyBank, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../store';
 import { format } from 'date-fns';
@@ -74,9 +75,15 @@ const Dashboard: React.FC = () => {
     <div className="card p-6">
       <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h3>
       <div className="space-y-3">
-        <button className="btn-primary w-full">Add Transaction</button>
-        <button className="btn-secondary w-full">Transfer Money</button>
-        <button className="btn-ghost w-full">View Reports</button>
+        <Link to="/transactions" className="btn-primary w-full block text-center">
+          Add Transaction
+        </Link>
+        <Link to="/accounts" className="btn-secondary w-full block text-center">
+          Transfer Money
+        </Link>
+        <Link to="/reports" className="btn-ghost w-full block text-center">
+          View Reports
+        </Link>
       </div>
     </div>
   );
