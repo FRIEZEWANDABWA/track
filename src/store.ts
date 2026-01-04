@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Account, Transaction, Category, Project, IncomeSource, User } from './types';
+import type { Account, Transaction, Category, Project, IncomeSource, User } from './types';
 
 interface AppState {
   // Data

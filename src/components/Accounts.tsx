@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, DollarSign } from 'lucide-react';
 import { useAppStore } from '../store';
-import { Account } from '../types';
+import type { Account } from '../types';
 
 const Accounts: React.FC = () => {
   const { accounts, addAccount, updateAccount, deleteAccount, getAccountBalance } = useAppStore();

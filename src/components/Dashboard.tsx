@@ -4,7 +4,7 @@ import { useAppStore } from '../store';
 import { format } from 'date-fns';
 
 const Dashboard: React.FC = () => {
-  const { getNetWorth, getMonthlyStats, accounts, projects, transactions } = useAppStore();
+  const { getNetWorth, getMonthlyStats, projects, transactions } = useAppStore();
   
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
