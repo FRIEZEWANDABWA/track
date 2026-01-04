@@ -47,8 +47,8 @@ const Dashboard: React.FC = () => {
       <div className="card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
             {change && (
               <div className="flex items-center mt-1">
                 {trend === 'up' ? (
@@ -72,7 +72,7 @@ const Dashboard: React.FC = () => {
 
   const QuickActions = () => (
     <div className="card p-6">
-      <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h3>
       <div className="space-y-3">
         <button className="btn-primary w-full">Add Transaction</button>
         <button className="btn-secondary w-full">Transfer Money</button>
@@ -153,8 +153,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400">
           Welcome back! Here's your financial overview for {format(currentDate, 'MMMM yyyy')}.
         </p>
       </div>

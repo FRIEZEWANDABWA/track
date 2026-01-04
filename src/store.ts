@@ -69,11 +69,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     { id: '4', name: 'Crypto', type: 'crypto', isActive: true },
   ],
   
-  theme: 'light',
+  theme: 'dark',
   sidebarOpen: false,
   
   // Actions
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    set({ user });
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  },
   setTheme: (theme) => {
     set({ theme });
     document.documentElement.classList.toggle('dark', theme === 'dark');
