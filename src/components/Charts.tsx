@@ -1,14 +1,14 @@
 import React from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-interface ChartData {
+interface PieChartData {
   name: string;
   value: number;
   color: string;
 }
 
 interface ExpensePieChartProps {
-  data: ChartData[];
+  data: PieChartData[];
 }
 
 export const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ data }) => {
