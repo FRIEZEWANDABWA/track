@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { BarChart3, PieChart, Upload, Download, Filter, Calendar } from 'lucide-react';
 import { useAppStore } from '../store';
-import { format, startOfWeek, startOfMonth, startOfQuarter, startOfYear, endOfWeek, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
+import { format, startOfWeek, startOfMonth, startOfQuarter, endOfWeek, endOfMonth, endOfQuarter } from 'date-fns';
 
 const Reports: React.FC = () => {
-  const { transactions, categories, accounts } = useAppStore();
+  const { transactions, categories } = useAppStore();
   const [filterPeriod, setFilterPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly'>('monthly');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [uploadStatus, setUploadStatus] = useState<string>('');
@@ -76,7 +76,6 @@ const Reports: React.FC = () => {
         // Look for common column names
         const dateIndex = headers.findIndex(h => h.toLowerCase().includes('date'));
         const amountIndex = headers.findIndex(h => h.toLowerCase().includes('amount'));
-        const descIndex = headers.findIndex(h => h.toLowerCase().includes('description') || h.toLowerCase().includes('desc'));
         
         if (dateIndex === -1 || amountIndex === -1) {
           setUploadStatus('Error: Could not find date or amount columns');

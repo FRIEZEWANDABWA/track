@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Target, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Target } from 'lucide-react';
 import { useAppStore } from '../store';
 import type { Project } from '../types';
 import { format } from 'date-fns';
