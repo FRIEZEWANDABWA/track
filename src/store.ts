@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Account, Transaction, Category, Project, IncomeSource, User, RecurringTransaction } from './types';
+import { dbService } from './lib/supabase';
 
 interface AppState {
   // Data
@@ -43,6 +44,9 @@ interface AppState {
   addCategory: (category: Category) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+  
+  // Load data from Supabase
+  loadUserData: () => Promise<void>;
   
   // Computed values
   getAccountBalance: (accountId: string) => number;
@@ -94,6 +98,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ user });
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
+      // Load user data from Supabase when user logs in
+      get().loadUserData();
     } else {
       localStorage.removeItem('user');
     }
@@ -105,23 +111,34 @@ export const useAppStore = create<AppState>((set, get) => ({
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   
   // Data actions
-  addAccount: (account) => set((state) => ({ 
-    accounts: [...state.accounts, account] 
-  })),
+  addAccount: (account) => {
+    set((state) => ({ accounts: [...state.accounts, account] }));
+    const state = get();
+    if (state.user?.id) dbService.saveAccount(account, state.user.id);
+  },
   
-  updateAccount: (id, updates) => set((state) => ({
-    accounts: state.accounts.map(acc => 
-      acc.id === id ? { ...acc, ...updates } : acc
-    )
-  })),
+  updateAccount: (id, updates) => {
+    set((state) => ({
+      accounts: state.accounts.map(acc => 
+        acc.id === id ? { ...acc, ...updates } : acc
+      )
+    }));
+    const state = get();
+    if (state.user?.id) {
+      const updatedAccount = state.accounts.find(acc => acc.id === id);
+      if (updatedAccount) dbService.saveAccount(updatedAccount, state.user.id);
+    }
+  },
   
   deleteAccount: (id) => set((state) => ({
     accounts: state.accounts.filter(acc => acc.id !== id)
   })),
   
-  addTransaction: (transaction) => set((state) => ({ 
-    transactions: [...state.transactions, transaction] 
-  })),
+  addTransaction: (transaction) => {
+    set((state) => ({ transactions: [...state.transactions, transaction] }));
+    const state = get();
+    if (state.user?.id) dbService.saveTransaction(transaction, state.user.id);
+  },
   
   updateTransaction: (id, updates) => set((state) => ({
     transactions: state.transactions.map(tx => 
@@ -213,9 +230,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   
   // Category actions
-  addCategory: (category) => set((state) => ({ 
-    categories: [...state.categories, category] 
-  })),
+  addCategory: (category) => {
+    set((state) => ({ categories: [...state.categories, category] }));
+    const state = get();
+    if (state.user?.id) dbService.saveCategory(category, state.user.id);
+  },
   
   updateCategory: (id, updates) => set((state) => ({
     categories: state.categories.map(cat => 
@@ -226,6 +245,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   deleteCategory: (id) => set((state) => ({
     categories: state.categories.filter(cat => cat.id !== id)
   })),
+  
+  // Load data from Supabase
+  loadUserData: async () => {
+    const state = get();
+    if (!state.user?.id) return;
+    
+    try {
+      const data = await dbService.loadAllData(state.user.id);
+      set({
+        accounts: data.accounts || [],
+        transactions: data.transactions || [],
+        categories: data.categories?.length ? data.categories : state.categories,
+      });
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    }
+  },
   
   // Computed values
   getAccountBalance: (accountId) => {
